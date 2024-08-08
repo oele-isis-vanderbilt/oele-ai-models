@@ -1,0 +1,5 @@
+{
+    "name": "hsemotion",
+    "implementation": "serve-model.HSEmotionModel", 
+    "version":"1.0.0"
+}
