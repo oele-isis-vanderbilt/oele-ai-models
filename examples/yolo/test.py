@@ -62,7 +62,6 @@ try:
     res = requests.post(inference_url, json=inference_request.dict())
     res.raise_for_status()  # Check for HTTP request errors
     logging.info("Got Response...")
-    print(res)
     response_dict = res.json()
 
 except requests.RequestException as e:
@@ -76,9 +75,6 @@ except ValueError as e:
 try:
     output_array = res.json()
     print(output_array)
-    image_array = np.asarray(output_array['outputs'][0]['data'])
-    cv2.imwrite('multiple-faces-emotions-output.png',image_array)
-    logging.info("Image saved as output_image.png")
 
 except KeyError as e:
     logging.error(f"Key error in response data: {e}")

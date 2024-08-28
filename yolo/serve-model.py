@@ -1,4 +1,3 @@
-import torch
 import numpy as np
 from ultralytics import YOLO
 from mlserver import types
@@ -15,12 +14,11 @@ class YoloModel(MLModel):
     async def load(self) -> bool:
         try:
             logger.info("Loading model...")
-            self.device = "cuda" if torch.cuda.is_available() else "cpu"
             self.model = YOLO("yolov8n.pt")
+            self.model.to('cuda')
             self.verbose = True
             logger.info("Model loaded successfully.")
-            logger.info(f"Torch device: {self.device}")
-            logger.info(f"Yolo Model device: {self.model.device}")
+            logger.info(f"Model Device: {self.model.device}")
             self.ready=True
         except Exception as e:
             logger.error(f"Error loading model: {e}")
@@ -39,8 +37,9 @@ class YoloModel(MLModel):
             logger.info("Processing prediction request...")
             bgr_frame = self._preprocess_inputs(payload)
 
-            results = self.model.predict(bgr_frame, verbose=self.verbose)
-            annotated_frame = results[0].plot()
+            results = self.model.predict(bgr_frame, verbose=self.verbose, device='cuda:0')
+            output = results[0].tojson()
+
 
             logger.debug("Prediction processed successfully.")
 
@@ -51,9 +50,9 @@ class YoloModel(MLModel):
                 outputs=[
                     types.ResponseOutput(
                         name="frame",
-                        shape=[len(annotated_frame)],
-                        datatype="BYTES",
-                        data=np.asarray(annotated_frame).tolist(),
+                        shape=[len(output)],
+                        datatype='BYTES',
+                        data=output,
                     )
                 ],
             )
