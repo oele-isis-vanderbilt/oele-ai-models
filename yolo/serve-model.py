@@ -19,6 +19,8 @@ class YoloModel(MLModel):
             self.model = YOLO("yolov8n.pt")
             self.verbose = True
             logger.info("Model loaded successfully.")
+            logger.info(f"Torch device: {self.device}")
+            logger.info(f"Yolo Model device: {self.model.device}")
             self.ready=True
         except Exception as e:
             logger.error(f"Error loading model: {e}")
