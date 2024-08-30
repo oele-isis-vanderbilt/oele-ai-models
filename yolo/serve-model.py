@@ -1,3 +1,4 @@
+from typing import AsyncIterator
 import numpy as np
 from ultralytics import YOLO
 from mlserver import types
@@ -11,12 +12,17 @@ logger = logging.getLogger(__name__)
 
 
 class YoloModel(MLModel):
+
+    def __init__(self, settings):
+        super().__init__(settings)
+        self.predict_stream = self.predict_stream
+
     async def load(self) -> bool:
         try:
             logger.info("Loading model...")
             self.model = YOLO("yolov8n.pt")
             self.model.to('cuda')
-            self.verbose = True
+            self.verbose = False
             logger.info("Model loaded successfully.")
             logger.info(f"Model Device: {self.model.device}")
             self.ready=True
@@ -34,26 +40,19 @@ class YoloModel(MLModel):
 
     async def predict(self, payload: types.InferenceRequest) -> types.InferenceResponse:
         try:
-            logger.info("Processing prediction request...")
+            # logger.info("Processing prediction request...")
             bgr_frame = self._preprocess_inputs(payload)
 
-            results = self.model.predict(bgr_frame, verbose=self.verbose, device='cuda:0')
-            output = results[0].tojson()
+            results = self.model.predict(bgr_frame, verbose=self.verbose, device='cuda:0', classes=[0])
 
-
-            logger.debug("Prediction processed successfully.")
-
+            op_frame = results[0].plot()
+            
             return types.InferenceResponse(
                 id=payload.id,
                 model_name=self.name,
                 model_version=self.version,
                 outputs=[
-                    types.ResponseOutput(
-                        name="frame",
-                        shape=[len(output)],
-                        datatype='BYTES',
-                        data=output,
-                    )
+                    NumpyCodec.encode_output(name="output", payload=op_frame, use_bytes=True)
                 ],
             )
 
@@ -66,3 +65,9 @@ class YoloModel(MLModel):
                 model_version=self.version,
                 outputs=[]
             )
+    
+    async def predict_stream(self, payloads: AsyncIterator[types.InferenceRequest]) -> AsyncIterator[types.InferenceResponse]:
+        async for payload in payloads:
+            yield await self.predict(payload)
+    
+        

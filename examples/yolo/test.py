@@ -21,7 +21,7 @@ try:
     if sys.argv[1] == "--local":
         inference_url = 'http://0.0.0.0:8080/v2/models/yolo/infer'
     elif sys.argv[1] == "--remote":
-        inference_url = 'http://localhost:8080/seldon/default/yolo/v2/models/infer'
+        inference_url = 'http://149.165.168.125/seldon/default/yolo/v2/models/infer'
     else:
         logging.error("Invalid inference mode provided. Use --local or --remote.")
         sys.exit(1)
@@ -34,7 +34,8 @@ except Exception as e:
 try:
     logging.info("Loading and preprocessing image...")
     image_path = "./images/multiple-faces-emotions.jpg"
-    input_data = cv2.imread(image_path)
+    input_data = cv2.imread(image_path, cv2.IMREAD_COLOR)
+    input_data = cv2.cvtColor(input_data, cv2.COLOR_BGR2RGB)
     print(input_data)
 
     if input_data is None:
