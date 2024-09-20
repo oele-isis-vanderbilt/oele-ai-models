@@ -19,7 +19,7 @@ try:
         sys.exit(1)
 
     if sys.argv[1] == "--local":
-        inference_url = 'http://0.0.0.0:8080/v2/models/yolo/infer'
+        inference_url = 'http://0.0.0.0:8080/v2/models/yolo-jpeg-codec/infer'
     elif sys.argv[1] == "--remote":
         inference_url = 'http://149.165.168.125/seldon/default/yolo/v2/models/infer'
     else:
@@ -36,7 +36,6 @@ try:
     image_path = "./images/multiple-faces-emotions.jpg"
     input_data = cv2.imread(image_path, cv2.IMREAD_COLOR)
     input_data = cv2.cvtColor(input_data, cv2.COLOR_BGR2RGB)
-    print(input_data)
 
     if input_data is None:
         logging.error(f"Failed to load image from path: {image_path}")
@@ -48,9 +47,12 @@ except Exception as e:
 
 # Build the inference request
 try:
+    from mlserver_jpeg_codec import JPEGCodec
+    input = JPEGCodec.encode_input(name="payload", payload=input_data)
+    print(input)
     inference_request = InferenceRequest(
         inputs=[
-            NumpyCodec.encode_input(name="payload", payload=input_data)
+            input
         ]
     )
 except Exception as e:

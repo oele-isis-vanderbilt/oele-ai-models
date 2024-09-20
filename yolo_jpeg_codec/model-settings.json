@@ -1,0 +1,5 @@
+{
+    "name": "yolo-jpeg-codec",
+    "implementation": "serve-model.YoloModel",
+    "version": "1.0.0"
+}
